@@ -45,6 +45,34 @@ The production server also defaults to port 3000. For a Node.js deployment, inst
 
 ## Project structure
 
+```text
+bida-registration/
+├── app/
+│   ├── registered/
+│   │   ├── page.tsx
+│   │   ├── registration-ticket.tsx
+│   │   └── ticket-image.ts
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── registration-form.tsx
+│   ├── registration-session.ts
+│   └── store-buttons.tsx
+├── assets/
+│   ├── fonts/
+│   │   ├── inter-offline.css
+│   │   ├── inter.woff2
+│   │   └── OFL-1.1.txt
+│   └── images/
+├── .gitignore
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── README.md
+└── tsconfig.json
+```
+
 | Path | Responsibility |
 | --- | --- |
 | [`app/layout.tsx`](app/layout.tsx) | Root layout, title, and icon. |
