@@ -29,6 +29,9 @@ const features = [
 ];
 
 function Hero() {
+  const appStoreUrl = process.env.BIDA_APP_STORE_URL;
+  const iosListing = appStoreUrl && /^https:\/\/apps\.apple\.com\/[^?#]+\/id\d+(?:[?#].*)?$/.test(appStoreUrl) ? appStoreUrl : undefined;
+
   return (
     <section
       id="download"
@@ -51,7 +54,7 @@ function Hero() {
           Meet BIDA — designed around<br />everyday financial needs Of<br />Filipinos abroad.
         </p>
       </div>
-      <StoreButtons />
+      <StoreButtons appStoreUrl={iosListing} />
     </section>
   );
 }
@@ -100,8 +103,8 @@ export default function HomePage() {
           <h2 id="join-title" className="text-[length:clamp(25px,4.1vw,44px)] leading-[1.09] font-bold tracking-[-0.045em]">
             Join our booth activities!
           </h2>
-          <p className="mt-2.5 mb-5">Register once, then show your confirmation to our booth team.</p>
-          <RegistrationForm shared={useSharedRegistration()} />
+          <p className="mt-2.5 mb-5">Download the BIDA app and complete your account registration. Show the app to our booth staff for verification, then return to this page or scan the booth QR code again to enter your verification code.</p>
+          <RegistrationForm demoCode={!useSharedRegistration() && process.env.VERCEL_ENV !== "production" ? "BDADE2M7" : undefined} />
         </section>
         <Capabilities />
       </main>

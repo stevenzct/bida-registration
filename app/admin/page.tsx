@@ -8,6 +8,7 @@ import { signOut } from "./actions";
 import { SignInForm } from "./auth-forms";
 import { LiveRegistrationUpdates } from "./live-registration-updates";
 import { RegistrationSearch } from "./registration-search";
+import { VerificationPanel, type VerificationEntry } from "./verification-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 const pageSize = 50;
-const searchMaxLength = 100;
+const searchMaxLength = 254;
 
 function AdminLayout({ children, signedIn = false }: { children: ReactNode; signedIn?: boolean }) {
   return (
@@ -71,12 +72,17 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const offset = (page - 1) * pageSize;
   const search = typeof q === "string" ? q.replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, searchMaxLength) : "";
   const registrations = search
-    ? client.rpc("search_registrations", { search_term: search })
-    : client.from("registrations").select("name, code, interests, created_at");
-  const { data } = await registrations
-    .order("created_at", { ascending: false })
-    .order("code", { ascending: false })
-    .range(offset, offset + pageSize);
+    ? client.rpc("search_booth_registrations", { search_term: search })
+    : client.from("registrations").select("name, code, email, created_at");
+  const [{ data }, { data: verificationCodes }] = await Promise.all([
+    registrations.order("created_at", { ascending: false }).order("code", { ascending: false }).range(offset, offset + pageSize),
+    client.from("verification_codes").select("code, expires_at, used_at").order("issued_at", { ascending: false }).order("code", { ascending: false }).limit(10),
+  ]);
+
+  const now = Date.now();
+  const recent: VerificationEntry[] | undefined = verificationCodes?.map(({ code, expires_at, used_at }) => ({
+    code, expires_at, status: used_at ? "Used" : Date.parse(expires_at) <= now ? "Expired" : "Available",
+  }));
 
   const rows = data?.slice(0, pageSize);
   const hasNextPage = (data?.length ?? 0) > pageSize;
@@ -93,6 +99,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           Auto-updates every 5 seconds
         </p>
       </header>
+      <VerificationPanel recent={recent} />
       <RegistrationSearch search={search} maxLength={searchMaxLength} rows={rows} page={page} offset={offset} hasNextPage={hasNextPage} />
     </AdminLayout>
   );

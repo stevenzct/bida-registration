@@ -14,7 +14,7 @@ function readRegistrations(): Registration[] {
   return JSON.parse(sessionStorage.getItem(storageKey) || "[]");
 }
 
-export function registerVisitor(name: string, interests: string[], confirmedCode?: string) {
+export function registerVisitor(name: string, confirmedCode?: string) {
   const registrations = readRegistrations();
   let code = confirmedCode;
   if (!code) {
@@ -24,7 +24,7 @@ export function registerVisitor(name: string, interests: string[], confirmedCode
     } while (registrations.some((registration) => registration.code === code));
   }
 
-  registrations.push({ name, code, interests, checked: [], created: new Date().toISOString() });
+  registrations.push({ name, code, interests: [], checked: [], created: new Date().toISOString() });
   sessionStorage.setItem(storageKey, JSON.stringify(registrations));
   return code;
 }

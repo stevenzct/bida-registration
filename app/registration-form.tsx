@@ -1,106 +1,141 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition, type FormEvent } from "react";
-import { activities } from "./activities";
+import { useState, useTransition, type FormEvent } from "react";
 import { isRegistrationCode } from "./registration-code";
 import { checkRegistrationStorage, registerVisitor } from "./registration-session";
+import { normalizeVerificationCode, verificationCodeLength } from "./verification-code";
 
-export function RegistrationForm({ shared }: { shared: boolean }) {
+const fieldClass = "mt-1.5 min-h-12 w-full rounded-[10px] border border-form-border bg-white px-3.5 py-2.5 text-base placeholder:text-[#757575]";
+const buttonClass = "primary-action min-h-12 rounded-xl px-[18px] py-3 font-bold text-white disabled:opacity-60";
+const verificationErrors = {
+  invalid: "That code is invalid. Check the code you received from staff.",
+  expired: "That code has expired. Ask booth staff for a new one.",
+  used: "That code has already been used. Ask booth staff for help.",
+};
+
+function verificationError(status: unknown) {
+  return status === "invalid" || status === "expired" || status === "used" ? verificationErrors[status] : undefined;
+}
+
+export function RegistrationForm({ demoCode }: { demoCode?: string }) {
   const router = useRouter();
-  const visitor = useRef<HTMLInputElement>(null);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [verified, setVerified] = useState(false);
   const [status, setStatus] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function verify(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isPending) return;
-
-    const name = visitor.current?.value.trim();
-    if (!name) {
-      setStatus("Enter a full name to continue.");
-      visitor.current?.focus();
+    const code = normalizeVerificationCode(verificationCode);
+    if (!code) {
+      setStatus(verificationErrors.invalid);
       return;
     }
+    setStatus("");
+    startTransition(async () => {
+      try {
+        let result: unknown;
+        if (demoCode) {
+          result = code === demoCode ? "available" : "invalid";
+        } else {
+          const response = await fetch("/api/verification", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code }),
+          });
+          result = (await response.json()).status;
+        }
+        if (result === "available") setVerified(true);
+        else setStatus(verificationError(result) ?? "Could not verify the code. Please try again.");
+      } catch {
+        setStatus("Could not verify the code. Please try again.");
+      }
+    });
+  }
 
-    const interests = new FormData(event.currentTarget).getAll("activities") as string[];
+  function register(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (isPending) return;
+    const form = new FormData(event.currentTarget);
+    const name = String(form.get("name") ?? "").trim();
+    const email = String(form.get("email") ?? "").trim();
+    if (!name) {
+      setStatus("Enter a full name to continue.");
+      return;
+    }
     setStatus("");
     startTransition(async () => {
       let confirmedCode: string | undefined;
       try {
-        if (shared) {
-          checkRegistrationStorage();
+        checkRegistrationStorage();
+        if (!demoCode) {
           try {
-            const result = await fetch("/api/registrations", {
+            const response = await fetch("/api/registrations", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ name, interests }),
+              body: JSON.stringify({ name, email, verificationCode }),
             });
-            if (!result.ok) throw new Error("Registration failed");
-            const data = await result.json();
-            if (!isRegistrationCode(data?.code)) {
-              throw new Error("Invalid confirmation code");
+            const result = await response.json();
+            if (!response.ok) {
+              const error = verificationError(result.status);
+              if (error) setVerified(false);
+              setStatus(error ?? (result.status === "invalid_details"
+                ? "Check your name and email address and try again."
+                : "Could not save the registration. Please try again."));
+              return;
             }
-            confirmedCode = data.code;
+            if (!isRegistrationCode(result.code)) throw new Error("Invalid confirmation code");
+            confirmedCode = result.code;
           } catch {
             setStatus("Could not save the registration. Please try again.");
             return;
           }
         }
-        const code = registerVisitor(name, interests, confirmedCode);
+        const code = registerVisitor(name, confirmedCode);
         startTransition(() => router.push(`/registered#${code}`));
       } catch {
         setStatus(confirmedCode
-          ? `Registration saved. Your code is ${confirmedCode}. This browser could not open the ticket.`
+          ? `Registration saved. Your reference is ${confirmedCode}. This browser could not open the ticket.`
           : "Could not save in this browser. Enable session storage and try again.");
       }
     });
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit}>
-      <label htmlFor="visitor" className="font-bold">Full name <b aria-hidden="true" className="text-[#b5149e]">*</b></label>
-      <input
-        id="visitor"
-        ref={visitor}
-        type="text"
-        name="visitor"
-        autoComplete="name"
-        required
-        maxLength={100}
-        placeholder="Enter a sample full name"
-        aria-describedby="status"
-        className="mt-1.5 mb-4 w-full rounded-[10px] border border-form-border bg-white px-3.5 py-3 placeholder:text-[#757575]"
-      />
-      <fieldset className="min-w-0">
-        <legend className="mb-[9px] font-bold">Activities (optional)</legend>
-        <div className="grid grid-cols-2 gap-2">
-          {activities.map((activity) => (
-            <label
-              key={activity}
-              className="flex min-h-11 cursor-pointer items-center gap-[9px] rounded-[40px] border border-[#b99ae5] bg-[#f4eefc] px-[clamp(8px,2vw,18px)] py-[7px] text-[length:clamp(13px,2vw,18px)] font-bold text-[#100d42] has-checked:border-[#ac87df] has-checked:bg-[#ede0fb]"
-            >
-              <span className="grid size-[clamp(20px,3vw,26px)] shrink-0">
-                <input
-                  type="checkbox"
-                  name="activities"
-                  value={activity}
-                  className="peer col-start-1 row-start-1 size-full cursor-pointer opacity-0 forced-colors:opacity-100"
-                />
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none relative col-start-1 row-start-1 rounded-[22%] border-2 border-[#8f6bbb] bg-white peer-checked:border-transparent peer-checked:bg-[#531bb1] peer-focus-visible:outline-3 peer-focus-visible:outline-offset-3 peer-focus-visible:outline-[#be6f00] after:absolute after:top-[43%] after:left-1/2 after:hidden after:h-[38%] after:w-[68%] after:-translate-x-1/2 after:-translate-y-1/2 after:-rotate-45 after:rounded-bl-[2px] after:border-b-[3px] after:border-l-[3px] after:border-white peer-checked:after:block forced-colors:invisible"
-                />
-              </span>
-              {activity}
-            </label>
-          ))}
-        </div>
-      </fieldset>
-      <button type="submit" disabled={isPending} className="primary-action mt-4 w-full rounded-xl px-[18px] py-[13px] text-[18px] font-bold text-white">
-        Register my name →
-      </button>
-      <p id="status" role="status" className="text-[#94203d] not-empty:mt-2.5">{status}</p>
-    </form>
+    <>
+      {verified ? (
+        <form onSubmit={register} className="grid gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[#f1e9fd] px-3.5 py-2.5 text-sm font-semibold text-[#4c247c]">
+            <p role="status">Code verified</p>
+            <button type="button" className="min-h-9 underline" disabled={isPending} onClick={() => { setVerified(false); setStatus(""); }}>Change code</button>
+          </div>
+          <label className="font-bold">Full name<input name="name" autoComplete="name" maxLength={100} required className={fieldClass} /></label>
+          <label className="font-bold">Email address<input name="email" type="email" autoComplete="email" maxLength={254} required className={fieldClass} /></label>
+          <button type="submit" className={buttonClass} disabled={isPending}>{isPending ? "Saving…" : "Complete registration"}</button>
+        </form>
+      ) : (
+        <form onSubmit={verify} className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+          <label className="font-bold">Verification code
+            <input
+              value={verificationCode}
+              onChange={(event) => setVerificationCode(event.target.value.toUpperCase())}
+              autoCapitalize="characters"
+              autoComplete="off"
+              spellCheck={false}
+              maxLength={verificationCodeLength}
+              placeholder="Enter your 8-character code"
+              required
+              disabled={isPending}
+              className={fieldClass}
+            />
+          </label>
+          <button type="submit" className={buttonClass} disabled={isPending}>{isPending ? "Verifying…" : "Verify code"}</button>
+          {demoCode && <p className="text-sm text-[#635575] sm:col-span-2">Local demo code <strong>{demoCode}</strong></p>}
+        </form>
+      )}
+      <p role="status" className="text-[#94203d] not-empty:mt-2.5">{status}</p>
+    </>
   );
 }

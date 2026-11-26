@@ -31,12 +31,12 @@ export async function downloadTicket(code: string) {
   context.font = "700 56px Inter";
   context.fillText("You are registered!", 480, 270);
   context.font = "600 24px Inter";
-  context.fillText("YOUR REGISTRATION CODE", 480, 380);
+  context.fillText("YOUR REGISTRATION REFERENCE", 480, 380);
   context.font = "800 88px Inter";
   context.fillText(code, 480, 495, 860);
   context.font = "400 26px Inter";
   context.fillText("BIDA Hong Kong · 06 December 2026", 480, 590);
-  context.fillText("Booth activities · Demo confirmation", 480, 635);
+  context.fillText("Booth activities · Registration confirmation", 480, 635);
 
   const link = document.createElement("a");
   link.href = canvas.toDataURL("image/png");

@@ -28,7 +28,7 @@ export default function RegisteredPage() {
           You are registered!
         </h1>
         <p className="text-[length:clamp(16px,3.4vw,22px)] leading-[1.38]">
-          Show this confirmation to the BIDA booth team when joining an activity.
+          Show this confirmation to the BIDA booth team to join games and giveaways.
         </p>
       </RegistrationTicket>
     </div>

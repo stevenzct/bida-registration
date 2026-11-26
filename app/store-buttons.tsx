@@ -7,8 +7,9 @@ import google from "../assets/images/play-badge.webp";
 
 const storeBadgeClass = "min-h-12 min-w-0 flex-1 rounded-[10px] hover:brightness-[0.94]";
 
-export function StoreButtons() {
+export function StoreButtons({ appStoreUrl }: { appStoreUrl?: string }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const appleBadge = <Image src={apple} alt="Download on the App Store" unoptimized loading="eager" className="h-auto w-full" />;
 
   return (
     <>
@@ -16,9 +17,11 @@ export function StoreButtons() {
         <a href="https://play.google.com/store/apps/details?id=com.payso.ofw" className={`${storeBadgeClass} flex items-center`}>
           <Image src={google} alt="Get it on Google Play" unoptimized loading="eager" className="h-auto w-full" />
         </a>
-        <button type="button" className={storeBadgeClass} onClick={() => dialog.current?.showModal()}>
-          <Image src={apple} alt="Download on the App Store" unoptimized loading="eager" className="h-auto w-full" />
-        </button>
+        {appStoreUrl ? (
+          <a href={appStoreUrl} className={`${storeBadgeClass} flex items-center`}>{appleBadge}</a>
+        ) : (
+          <button type="button" className={storeBadgeClass} onClick={() => dialog.current?.showModal()}>{appleBadge}</button>
+        )}
       </div>
       <dialog
         ref={dialog}
@@ -27,7 +30,7 @@ export function StoreButtons() {
         className="m-auto w-[min(94vw,480px)] rounded-[20px] bg-white p-6 text-ink backdrop:bg-[#0b0936b5]"
       >
         <h2 id="store-title" className="mb-2.5 text-[26px] leading-[1.09] font-bold tracking-[-0.045em]">App Store</h2>
-        <p id="store-preview">Preview only. The verified BIDA store listing will open here at launch.</p>
+        <p id="store-preview">The iPhone download link is coming soon. Ask booth staff for help.</p>
         <button type="button" className="primary-action mx-[5px] mt-3 rounded-xl px-[18px] py-[13px] font-bold text-white" onClick={() => dialog.current?.close()}>
           Close
         </button>

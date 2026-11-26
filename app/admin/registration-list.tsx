@@ -3,12 +3,19 @@ import Link from "next/link";
 export type Registration = {
   name: string;
   code: string;
-  interests: string[];
+  email: string | null;
   created_at: string;
 };
 
 const eventDate = new Intl.DateTimeFormat("en-HK", { dateStyle: "medium", timeZone: "Asia/Hong_Kong" });
 const eventTime = new Intl.DateTimeFormat("en-HK", { timeStyle: "medium", timeZone: "Asia/Hong_Kong" });
+const numericEventTime = new Intl.DateTimeFormat("sv-SE", { dateStyle: "short", timeStyle: "medium", timeZone: "Asia/Hong_Kong" });
+
+export function matchesRegistration({ name, code, email, created_at }: Registration, needle: string) {
+  const date = new Date(created_at);
+  return [name, code, email ?? "", `${eventDate.format(date)}, ${eventTime.format(date)}`, numericEventTime.format(date)]
+    .some((field) => field.toLowerCase().includes(needle));
+}
 
 function RegistrationTime({ value }: { value: string }) {
   const date = new Date(value);
@@ -28,18 +35,8 @@ function RegistrationCode({ code }: { code: string }) {
   );
 }
 
-function Activities({ interests }: { interests: string[] }) {
-  if (!interests.length) return <span className="text-sm text-[#635575]">None selected</span>;
-
-  return (
-    <ul role="list" className="flex flex-wrap gap-1.5">
-      {interests.map((activity) => (
-        <li key={activity} className="rounded-full border border-[#e8dff5] bg-[#f8f5fd] px-2.5 py-0.5 text-[13px] leading-5 font-medium text-[#473364]">
-          {activity}
-        </li>
-      ))}
-    </ul>
-  );
+function RegistrationEmail({ email }: { email: string | null }) {
+  return <span className="text-sm [overflow-wrap:anywhere] text-[#514066]">{email ?? "Unavailable"}</span>;
 }
 
 const fieldLabel = "mb-1 text-[13px] font-semibold text-[#635575]";
@@ -70,12 +67,12 @@ export function RegistrationList({ rows, page, offset, hasNextPage, search, pend
       ) : (
         <>
           <ul role="list" className="grid gap-3 sm:grid-cols-2 md:hidden">
-            {rows.map(({ name, code, interests, created_at }) => (
+            {rows.map(({ name, code, email, created_at }) => (
               <li key={code} className="rounded-2xl border border-[#e5dcf0] bg-white p-4 shadow-[0_3px_14px_#2d145709]">
                 <h2 className="text-base leading-snug font-bold [overflow-wrap:anywhere] text-[#221539]">{name}</h2>
                 <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-3.5 border-t border-[#eee8f5] pt-3">
                   <div className="min-w-0">
-                    <dt className={fieldLabel}>Registration code</dt>
+                    <dt className={fieldLabel}>Reference</dt>
                     <dd><RegistrationCode code={code} /></dd>
                   </div>
                   <div className="min-w-0">
@@ -83,8 +80,8 @@ export function RegistrationList({ rows, page, offset, hasNextPage, search, pend
                     <dd><RegistrationTime value={created_at} /></dd>
                   </div>
                   <div className="col-span-2">
-                    <dt className={fieldLabel}>Selected activities</dt>
-                    <dd><Activities interests={interests} /></dd>
+                    <dt className={fieldLabel}>Email address</dt>
+                    <dd><RegistrationEmail email={email} /></dd>
                   </div>
                 </dl>
               </li>
@@ -96,17 +93,17 @@ export function RegistrationList({ rows, page, offset, hasNextPage, search, pend
               <thead className="bg-[#f0e9fa] text-[13px] font-semibold text-[#514066]">
                 <tr>
                   <th scope="col" className="w-[25%] px-4 py-3.5 lg:px-5">Full name</th>
-                  <th scope="col" className="w-[20%] px-4 py-3.5 lg:px-5">Registration code</th>
-                  <th scope="col" className="w-[35%] px-4 py-3.5 lg:px-5">Selected activities</th>
+                  <th scope="col" className="w-[20%] px-4 py-3.5 lg:px-5">Reference</th>
+                  <th scope="col" className="w-[35%] px-4 py-3.5 lg:px-5">Email address</th>
                   <th scope="col" className="w-[20%] px-4 py-3.5 lg:px-5">Time of registration</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map(({ name, code, interests, created_at }) => (
+                {rows.map(({ name, code, email, created_at }) => (
                   <tr key={code} className="border-t border-[#eee8f5] align-middle hover:bg-[#fcfaff]">
                     <th scope="row" className="px-4 py-3.5 font-semibold [overflow-wrap:anywhere] text-[#221539] lg:px-5">{name}</th>
                     <td className="px-4 py-3.5 lg:px-5"><RegistrationCode code={code} /></td>
-                    <td className="px-4 py-3.5 lg:px-5"><Activities interests={interests} /></td>
+                    <td className="px-4 py-3.5 lg:px-5"><RegistrationEmail email={email} /></td>
                     <td className="px-4 py-3.5 lg:px-5"><RegistrationTime value={created_at} /></td>
                   </tr>
                 ))}

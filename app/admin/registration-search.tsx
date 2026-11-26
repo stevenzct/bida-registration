@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { RegistrationList, type Registration } from "./registration-list";
+import { matchesRegistration, RegistrationList, type Registration } from "./registration-list";
 
 export function RegistrationSearch({ search, maxLength, rows, page, offset, hasNextPage }: {
   search: string;
@@ -41,8 +41,7 @@ export function RegistrationSearch({ search, maxLength, rows, page, offset, hasN
   const pending = term !== search;
   const needle = term.toLowerCase();
   const visibleRows = pending
-    ? rows?.filter(({ name, code, interests }) => [name, code, interests.join(", ")]
-      .some((field) => field.toLowerCase().includes(needle)))
+    ? rows?.filter((row) => matchesRegistration(row, needle))
     : rows;
 
   return (
@@ -63,7 +62,7 @@ export function RegistrationSearch({ search, maxLength, rows, page, offset, hasN
             id="registration-search"
             name="q"
             type="search"
-            placeholder="Name, code, or activity"
+            placeholder="Name, email, reference, or time"
             maxLength={maxLength}
             value={value}
             onChange={(event) => applySearch(event.target.value)}
