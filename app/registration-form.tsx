@@ -2,18 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition, type FormEvent } from "react";
-import { registerVisitor } from "./registration-session";
+import { activities } from "./activities";
+import { isRegistrationCode } from "./registration-code";
+import { checkRegistrationStorage, registerVisitor } from "./registration-session";
 
-const activities = [
-  "Spin Wheel",
-  "Quick Quiz",
-  "App Demo",
-  "Photo Wall",
-  "Scan & Discover",
-  "Feedback Wall",
-];
-
-export function RegistrationForm() {
+export function RegistrationForm({ shared }: { shared: boolean }) {
   const router = useRouter();
   const visitor = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState("");
@@ -31,12 +24,37 @@ export function RegistrationForm() {
     }
 
     const interests = new FormData(event.currentTarget).getAll("activities") as string[];
-    try {
-      const code = registerVisitor(name, interests);
-      startTransition(() => router.push(`/registered#${code}`));
-    } catch {
-      setStatus("Could not save in this browser. Enable session storage and try again.");
-    }
+    setStatus("");
+    startTransition(async () => {
+      let confirmedCode: string | undefined;
+      try {
+        if (shared) {
+          checkRegistrationStorage();
+          try {
+            const result = await fetch("/api/registrations", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name, interests }),
+            });
+            if (!result.ok) throw new Error("Registration failed");
+            const data = await result.json();
+            if (!isRegistrationCode(data?.code)) {
+              throw new Error("Invalid confirmation code");
+            }
+            confirmedCode = data.code;
+          } catch {
+            setStatus("Could not save the registration. Please try again.");
+            return;
+          }
+        }
+        const code = registerVisitor(name, interests, confirmedCode);
+        startTransition(() => router.push(`/registered#${code}`));
+      } catch {
+        setStatus(confirmedCode
+          ? `Registration saved. Your code is ${confirmedCode}. This browser could not open the ticket.`
+          : "Could not save in this browser. Enable session storage and try again.");
+      }
+    });
   }
 
   return (

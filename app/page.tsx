@@ -6,6 +6,9 @@ import exchange from "../assets/images/feature-exchange.webp";
 import transfer from "../assets/images/feature-transfer.webp";
 import { MobileNav, StoreButtons } from "./store-buttons";
 import { RegistrationForm } from "./registration-form";
+import { useSharedRegistration } from "../lib/supabase/config";
+
+export const dynamic = "force-dynamic";
 
 const features = [
   {
@@ -98,7 +101,7 @@ export default function HomePage() {
             Join our booth activities!
           </h2>
           <p className="mt-2.5 mb-5">Register once, then show your confirmation to our booth team.</p>
-          <RegistrationForm />
+          <RegistrationForm shared={useSharedRegistration()} />
         </section>
         <Capabilities />
       </main>
