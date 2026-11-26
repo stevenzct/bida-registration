@@ -1,0 +1,133 @@
+@import "tailwindcss" source(none);
+@source "./";
+
+@font-face {
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../assets/fonts/inter.woff2") format("woff2");
+}
+
+@theme {
+  --breakpoint-desktop: 701px;
+  --color-ink: #1b1148;
+  --color-form-border: #aba5ba;
+  --font-sans: Inter, Arial, sans-serif;
+}
+
+@custom-variant hero-wide (@media (width > 700px) and (height > 500px));
+@custom-variant short-landscape (@media (orientation: landscape) and (max-height: 500px));
+@custom-variant ticket-actions (@media (width > 340px));
+
+@layer base {
+  :root {
+    color-scheme: light;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: linear-gradient(180deg, #0a1045 0%, #241359 33%, #ede9fb 58%, #f6f5fc 100%);
+    color: var(--color-ink);
+    font: 16px/1.48 var(--font-sans);
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 3px solid #be6f00;
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      scroll-behavior: auto;
+    }
+  }
+}
+
+@layer components {
+  .hero {
+    background-color: #090f42;
+  }
+
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: url("../assets/images/hk-sunset.webp") right top / 100% auto no-repeat;
+    mask-image: linear-gradient(to bottom, #000 65%, transparent 100%);
+    mask-size: 100% 73.65vw;
+    mask-repeat: no-repeat;
+  }
+
+  @variant hero-wide {
+    .hero::before {
+      background-position: center;
+      background-size: cover;
+      mask-image: none;
+    }
+  }
+
+  @variant short-landscape {
+    .hero::before {
+      background-position: center 36%;
+      background-size: cover;
+    }
+  }
+
+  .registration-panel {
+    background: linear-gradient(130deg, #fff, #faf9fd);
+    box-shadow: 0 10px 26px #39208326;
+  }
+
+  .primary-action {
+    background: linear-gradient(110deg, #301590, #8c19b9);
+  }
+
+  .capabilities-heading {
+    background:
+      radial-gradient(ellipse at 0 0, #d24aff 0%, transparent 48%),
+      linear-gradient(120deg, #7a27df, #292079 85%);
+  }
+
+  .capabilities-heading::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    box-sizing: content-box;
+    right: -22%;
+    bottom: -140%;
+    width: 55%;
+    aspect-ratio: 1;
+    border: clamp(16px, 3vw, 42px) solid #9258e77a;
+    box-shadow:
+      0 0 0 clamp(16px, 3vw, 42px) #8150cf66,
+      0 0 0 clamp(32px, 6vw, 84px) #7450c94d;
+    border-radius: 50%;
+  }
+
+  .ticket-page {
+    background: radial-gradient(ellipse at center, #f6efff, #e4d2fb);
+  }
+
+  .ticket {
+    background:
+      linear-gradient(#fff, #fff) top / 100% calc(100% - 8px) no-repeat,
+      radial-gradient(circle at 50% 0, #fff 70%, transparent 72%) bottom / 32px 12px repeat-x;
+    filter: drop-shadow(0 8px 12px #34106525);
+  }
+
+  .ticket-header {
+    background: linear-gradient(120deg, #300843, #230636);
+  }
+}
+
+@media (max-width: 700px) {
+  body:has(input:focus, dialog[open]) .mobile-nav {
+    display: none;
+  }
+}
