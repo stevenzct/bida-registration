@@ -1,6 +1,6 @@
 # BIDA Hong Kong booth registration
 
-This project is the registration site for the BIDA booth in Hong Kong on 6 December 2026. Visitors can choose optional activities, enter a name, and save a PNG of their confirmation code. It runs as a browser-only demo by default. With Supabase enabled, registrations are saved centrally and appear in a private admin dashboard. The Google Play and App Store badges open preview dialogs.
+This project is the registration site for the BIDA booth in Hong Kong on 6 December 2026. Visitors can choose optional activities, enter a name, and save a PNG of their confirmation code. It runs as a browser-only demo by default. With Supabase enabled, registrations are saved centrally and appear in a private admin dashboard. The Google Play badge opens the app listing, and the App Store badge opens a preview dialog.
 
 ## Tech stack
 
@@ -99,7 +99,7 @@ Before public launch, serve the app over HTTPS, keep `/admin` responses out of a
 
 | URL | Behavior |
 | --- | --- |
-| `/` | Shows the landing page, store previews, and registration form. |
+| `/` | Shows the landing page, store badges, and registration form. |
 | `/#download` | Jumps to the hero and store badges. The confirmation screen links here. |
 | `/#join` | Jumps to the registration form. Missing or unknown confirmation codes return here. |
 | `/registered#BIDA-…` | Displays a confirmation when the code belongs to a record in the current session. |
@@ -170,7 +170,7 @@ bida-registration/
 | [`app/api/registrations/route.ts`](app/api/registrations/route.ts) | Validates visitor input and inserts registrations using a server-side Supabase key. |
 | [`app/admin/`](app/admin/) | Admin sign-in and paginated registrations table. |
 | [`proxy.ts`](proxy.ts) | Refreshes Supabase sessions for admin routes. |
-| [`app/store-buttons.tsx`](app/store-buttons.tsx) | Client Components for store preview dialogs and the mobile navigation bar. |
+| [`app/store-buttons.tsx`](app/store-buttons.tsx) | Store badges, the App Store preview dialog, and the mobile navigation bar. |
 | [`app/registered/page.tsx`](app/registered/page.tsx) | Confirmation route metadata and static ticket content. |
 | [`app/registered/registration-ticket.tsx`](app/registered/registration-ticket.tsx) | Client Component that validates the code from the URL fragment and handles ticket actions. |
 | [`app/registered/ticket-image.ts`](app/registered/ticket-image.ts) | Draws the confirmation PNG with Canvas and starts the download. |
@@ -248,7 +248,7 @@ Open `index.html` in that checkout in Chrome or Edge, or serve the checkout with
 ## Manual regression checks
 
 1. Compare the Next.js app and the original reference at **375 px**, **768 px**, and **1440 px** in responsive mode. Check hero crops, typography, spacing, images, and the scalloped ticket edge. Look for horizontal overflow. Also check a narrow 320 px viewport for stacked ticket buttons and a short landscape viewport such as 844 × 390 for the compact hero.
-2. Open both store badges and verify the title and preview copy. Close one dialog with **Close** and the other with **Escape**. At mobile widths, scroll past the badges and verify that the bottom navigation appears and that input focus hides it.
+2. Click the Google Play badge and confirm it opens the [Google Play listing](https://play.google.com/store/apps/details?id=com.payso.ofw). Open the App Store badge, check the preview copy, and test both **Close** and **Escape**. At mobile widths, scroll past the badges and verify that the bottom navigation appears and that input focus hides it.
 3. Try submitting an empty or whitespace-only name. Confirm the validation message and input focus. Register with a sample name and selected activities, then repeat with no selections. Inspect the session storage array and confirm that each ticket matches its stored code.
 4. Reload the confirmation in the same tab and verify that the code remains visible. Try an unknown code and verify that it returns to `/#join`.
 5. Save the ticket image and open the resulting PNG. Check that the filename and printed code match the confirmation, then click **Download BIDA** and verify that the page returns to `/#download`.
