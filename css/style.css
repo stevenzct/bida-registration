@@ -1,0 +1,439 @@
+@import url("../assets/fonts/inter-offline.css");
+
+* {
+  box-sizing: border-box;
+}
+:root {
+  color-scheme: light;
+  --ink: #1b1148;
+  --purple: #6622be;
+  --border: #aba5ba;
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  margin: 0;
+  background: linear-gradient(
+    180deg,
+    #0a1045 0%,
+    #241359 33%,
+    #ede9fb 58%,
+    #f6f5fc 100%
+  );
+  color: var(--ink);
+  font:
+    16px/1.48 Inter,
+    Arial,
+    sans-serif;
+}
+main {
+  width: min(100%, 1000px);
+  margin: auto;
+  padding-bottom: 65px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+.panel {
+  position: relative;
+  margin: -1px clamp(6px, 1.6vw, 16px) 0;
+  padding: clamp(20px, 4.5vw, 48px);
+  border: 1px solid #e0dcf0;
+  border-radius: clamp(21px, 4vw, 44px);
+  background: linear-gradient(130deg, #fff, #faf9fd);
+  box-shadow: 0 10px 26px #39208326;
+}
+h2,
+h3,
+p,
+fieldset {
+  margin: 0;
+}
+h2 {
+  font-size: clamp(25px, 4.1vw, 44px);
+  letter-spacing: -0.045em;
+  line-height: 1.09;
+}
+.panel h2 + p {
+  margin: 10px 0 20px;
+}
+label,
+legend {
+  font-weight: 700;
+}
+label b {
+  color: #b5149e;
+}
+input:not([type="checkbox"]) {
+  width: 100%;
+  margin: 6px 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+}
+fieldset {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+legend {
+  padding: 0;
+  margin-bottom: 9px;
+}
+#choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+#choices label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 7px clamp(8px, 2vw, 18px);
+  border-radius: 40px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: clamp(13px, 2vw, 18px);
+}
+#choices input {
+  margin: 0;
+  accent-color: #7021c9;
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+#choices label:has(:checked) {
+  border-color: #7837cb;
+  background: linear-gradient(110deg, #f1e4ff, #e5d5f7);
+}
+#submit,
+dialog button {
+  color: white;
+  background: linear-gradient(110deg, #301590, #8c19b9);
+  border: 0;
+  padding: 13px 18px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+#submit {
+  margin-top: 16px;
+  width: 100%;
+  font-size: 18px;
+}
+#status:not(:empty) {
+  margin-top: 10px;
+  color: #94203d;
+}
+#success {
+  padding: 20px;
+  border: 1px solid #e0d4f4;
+  border-radius: 14px;
+}
+output {
+  display: block;
+  font-size: 24px;
+  font-weight: 800;
+  margin: 12px 0;
+}
+
+.capabilities {
+  margin-top: 28px;
+  color: #100d42;
+  background: #3923a2;
+  overflow: hidden;
+}
+.capabilities header {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(24px, 5%, 52px) 5% clamp(42px, 8%, 84px);
+  color: white;
+  background:
+    radial-gradient(ellipse at 0 0, #d24aff 0%, transparent 48%),
+    linear-gradient(120deg, #7a27df, #292079 85%);
+}
+.capabilities header::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -22%;
+  bottom: -140%;
+  width: 55%;
+  aspect-ratio: 1;
+  border: clamp(16px, 3vw, 42px) solid #9258e77a;
+  box-shadow:
+    0 0 0 clamp(16px, 3vw, 42px) #8150cf66,
+    0 0 0 clamp(32px, 6vw, 84px) #7450c94d;
+  border-radius: 50%;
+}
+.capabilities header h2 {
+  font-size: clamp(23px, 5.65vw, 56px);
+  letter-spacing: -0.042em;
+  margin-bottom: 12px;
+}
+.capabilities header span {
+  display: inline-block;
+  font-size: clamp(14px, 2.7vw, 24px);
+  font-weight: 700;
+  line-height: 1.25;
+  padding: 3px 0.9em;
+  border: 2px solid white;
+  border-radius: 100px;
+}
+.features {
+  list-style: none;
+  position: relative;
+  background: white;
+  border-radius: clamp(20px, 5vw, 48px) clamp(20px, 5vw, 48px) 0 0;
+  margin: -20px 0 0;
+  padding: 4px 4.5%;
+}
+.features li {
+  display: grid;
+  grid-template-columns: clamp(44px, 10vw, 102px) minmax(0, 1fr);
+  gap: clamp(12px, 3vw, 30px);
+  align-items: center;
+  padding: clamp(16px, 3.75vw, 36px) 0;
+}
+.features li + li {
+  border-top: 1px solid #d5bdff;
+}
+.features img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.features h3 {
+  font-size: clamp(18px, 3.65vw, 36px);
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin: 0 0 4px;
+}
+.features p,
+.assistance {
+  font-size: clamp(15px, 2.55vw, 24px);
+  line-height: 1.4;
+}
+.assistance {
+  background: #f2edfb;
+  text-align: center;
+  padding: clamp(20px, 4.5vw, 44px) 5%;
+  font-weight: 500;
+}
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  position: fixed;
+  z-index: 2;
+  bottom: 0;
+  width: 100%;
+  padding: 9px;
+  background: white;
+  box-shadow: 0 -1px 14px #1811391f;
+}
+nav a {
+  background: #431ba4;
+  color: white;
+  padding: 9px 12px;
+  border-radius: 9px;
+  text-decoration: none;
+  font-size: 14px;
+}
+nav a + a {
+  background: #eee6fb;
+  color: #462182;
+}
+dialog {
+  width: min(94vw, 480px);
+  border: 0;
+  border-radius: 20px;
+  padding: 24px;
+  color: var(--ink);
+}
+dialog h2 {
+  font-size: 26px;
+  margin: 0 0 10px;
+}
+dialog button {
+  margin: 12px 5px 0;
+}
+dialog::backdrop {
+  background: #0b0936b5;
+}
+[hidden] {
+  display: none !important;
+}
+:focus-visible {
+  outline: 3px solid #be6f00;
+  outline-offset: 3px;
+}
+@media (min-width: 701px) {
+  nav {
+    display: none;
+  }
+}
+@media (max-width: 700px) {
+  body:has(input:focus) nav,
+  body:has(dialog[open]) nav {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  background: #090f42 url(../assets/images/hk-sunset.webp) center / cover
+    no-repeat;
+  color: white;
+  aspect-ratio: 1461/1076;
+  padding: 5%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.hero .brand {
+  width: 17%;
+  height: auto;
+}
+.message {
+  margin-block: auto;
+  width: 58%;
+}
+.message h1 {
+  margin: 0 0 8px;
+}
+.message h1 img {
+  display: block;
+  width: 100%;
+}
+.message p {
+  font-size: clamp(18px, 2.6vw, 29px);
+  line-height: 1.36;
+}
+.stores {
+  display: flex;
+  gap: 10px;
+  width: 48%;
+  margin-bottom: 7%;
+}
+.stores button {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  border-radius: 10px;
+}
+.stores img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.stores button:hover {
+  filter: brightness(0.94);
+}
+@media (max-width: 700px), (orientation: landscape) and (max-height: 500px) {
+  .hero {
+    aspect-ratio: auto;
+    padding: clamp(12px, 4vw, 24px);
+    gap: 10px;
+    background: #090f42;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: url(../assets/images/hk-sunset.webp) right top / 100% auto
+      no-repeat;
+    mask-image: linear-gradient(to bottom, #000 65%, transparent 100%);
+    mask-size: 100% 73.65vw;
+    mask-repeat: no-repeat;
+  }
+  .hero .brand {
+    width: clamp(60px, 18vw, 105px);
+  }
+  .message {
+    width: 100%;
+    margin: clamp(10px, 4.6vw, 28px) 0 0;
+  }
+  .message h1 {
+    width: 65%;
+    max-width: 400px;
+    margin: 0 0 5px;
+  }
+  .message p {
+    font-size: clamp(15px, 4vw, 19px);
+    line-height: 1.35;
+    text-shadow:
+      0 1px 5px #080932,
+      0 0 12px #080932;
+  }
+  .stores {
+    width: min(100%, 420px);
+    align-self: center;
+    margin: 6px auto 0;
+    gap: 8px;
+  }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-content: center;
+    align-items: end;
+    padding: 10px 4%;
+    gap: 5px 16px;
+  }
+  .hero .brand {
+    width: 58px;
+  }
+  .hero .message {
+    grid-column: 1;
+    margin: 0;
+  }
+  .message h1 {
+    width: 70%;
+    margin-bottom: 3px;
+  }
+  .message p {
+    font-size: 14px;
+  }
+  .hero::before {
+    background-size: cover;
+    background-position: center 36%;
+  }
+}
+
+.hero .message p {
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.35em 0.6em;
+  border-radius: 0.4em;
+  background-color: rgb(9 15 58 / 26%);
+  color: #fff;
+  text-shadow: none;
+}
