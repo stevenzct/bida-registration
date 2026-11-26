@@ -58,7 +58,7 @@ export function RegistrationTicket({ header, footer, children }: {
         </div>
         <div className="my-[clamp(26px,6vw,52px)] grid grid-cols-1 gap-2 ticket-actions:grid-cols-2">
           <button type="button" className={`${actionClass} bg-[#740a98] text-white`} onClick={saveImage}>
-            <span aria-hidden="true">↓</span> Save confirmation image
+            <span aria-hidden="true">↓</span> Save image
           </button>
           <Link href="/#download" className={`${actionClass} bg-white text-[#681080]`}>
             Download BIDA <span aria-hidden="true">→</span>
