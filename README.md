@@ -23,7 +23,7 @@ npm ci
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). For the browser-only demo, use `BDADE2M7` to unlock the form, then enter a sample name and email. Keep the landing page and confirmation in the same tab so the ticket can read the registration. To select another local port, run `npm run dev -- --port 3061` and use the URL printed by Next.js.
+Open [http://localhost:3000](http://localhost:3000). For the browser-only demo, enter `0529` from `BIDA-0529` to unlock the form, then enter a sample name and email. Keep the landing page and confirmation in the same tab so the ticket can read the registration. To select another local port, run `npm run dev -- --port 3061` and use the URL printed by Next.js.
 
 | Mode | Use it for | What to expect |
 | --- | --- | --- |
@@ -64,6 +64,8 @@ The production server also defaults to port 3000. For a Node.js deployment, inst
    | `SUPABASE_PUBLISHABLE_KEY` | The publishable key used with the admin's authenticated session. |
    | `SUPABASE_SECRET_KEY` | The secret key the server uses to insert registrations. |
    | `BIDA_APP_STORE_URL` | Optional official `https://apps.apple.com/…/id…` URL. The iPhone badge shows download information until this is set. |
+   | `BIDA_PRIVACY_CONTACT_NAME` | Public name or job title for registration-data access and correction requests. Defaults to BIDA Booth Registration Lead when a contact address is set. |
+   | `BIDA_PRIVACY_CONTACT_ADDRESS` | Public mailing address displayed in the booth Data Privacy Notice. Without it the notice directs visitors to the booth team. |
 
 4. Restart the app, sign in at `/admin` with the allowlisted user's email and password, and click **Issue verification code**. Enter it on the visitor page in another tab, submit a sample name and email address, and check that the new row and **Used** status appear on the dashboard.
 
@@ -86,13 +88,17 @@ Store staff passwords and `SUPABASE_SECRET_KEY` in approved credential storage. 
 
 ### How the admin dashboard works
 
-After checking the open BIDA app, staff click **Issue verification code** and share the eight-character code with that visitor. Codes expire after 10 minutes, and the dashboard shows recent codes as **Available**, **Used**, or **Expired**. The dashboard displays 50 registrations per page, newest first, with timestamps shown in Hong Kong time (UTC+8). Search matches a partial name, email, reference, or registration time. **Clear** restores the full list. The dashboard checks for updates every five seconds while visible and preserves the active search.
+After checking the open BIDA app, staff click **Issue verification code** and share the complete `BIDA-XXXX` code with that visitor. **Copy code** includes the `BIDA-` prefix. Codes expire after 10 minutes, and the dashboard shows recent codes as **Available**, **Used**, or **Expired**. Each numeric code is issued at most once, so the four-digit format supports 10,000 total issues per database. The dashboard displays 50 registrations per page, newest first, with timestamps shown in Hong Kong time (UTC+8). Search matches a partial name, email, reference, or registration time. **Clear** restores the full list. The dashboard checks for updates every five seconds while visible and preserves the active search.
 
 Supabase Auth checks the email and password. The server and database RLS both check the user's UID against `registration_admins`. The admin session is stored in HTTP-only cookies and refreshed for `/admin` through [`proxy.ts`](proxy.ts).
 
 ### Deployment
 
 For an upgrade from the original flow, apply `20261126000004_staff_verification.sql` first and deploy the updated app. Once that release is active, apply `20261126000005_require_verified_registration.sql` to disable legacy direct writes. The public Vercel Production deployment requires shared mode. Run the visitor and admin checks below against the deployed URL.
+
+Apply `20261127000000_numeric_booth_verification.sql` before deploying the numeric-code app. Previously issued eight-character codes retain their expiration and can be entered through **Have an older code?**.
+
+The verification and registration endpoints share a database limit of 30 code attempts per minute per source and pause that source after five failed code checks until 10 minutes have passed since its last failure. The app uses Vercel's client IP header. On another host, set `BIDA_TRUSTED_CLIENT_IP_HEADER` to a header your proxy overwrites with the client's IP and block direct access to the app server. Requests without a trusted address share a single limit. IPv6 addresses are grouped by `/64`.
 
 Before public launch, serve the app over HTTPS, keep `/admin` responses out of any CDN or proxy cache, and configure host-level rate limits for `/api/verification`, `/api/registrations`, and `/admin` sign-in. Use individual admin accounts, store project secrets in the host's secret manager, and decide how long attendee records should be kept. [Supabase API keys](https://supabase.com/docs/guides/getting-started/api-keys) · [Supabase Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)
 
@@ -136,7 +142,8 @@ bida-registration/
 │   ├── registration-form.tsx
 │   ├── registration-session.ts
 │   ├── store-buttons.tsx
-│   └── verification-code.ts
+│   ├── verification-code.ts
+│   └── verification-input.tsx
 ├── assets/
 │   ├── fonts/
 │   │   ├── inter-offline.css
@@ -155,7 +162,8 @@ bida-registration/
 │       ├── 20261126000002_bida_registration_codes.sql
 │       ├── 20261126000003_registration_search.sql
 │       ├── 20261126000004_staff_verification.sql
-│       └── 20261126000005_require_verified_registration.sql
+│       ├── 20261126000005_require_verified_registration.sql
+│       └── 20261127000000_numeric_booth_verification.sql
 ├── .env.example
 ├── .gitignore
 ├── next.config.ts
@@ -207,17 +215,20 @@ The confirmation route reads the code from the URL fragment in the browser. Relo
 
 ### Shared registration API
 
-`POST /api/verification` takes `{"code":"BDADE2M7"}` and returns `available`, `expired`, `used`, or `invalid` in the `status` field. `POST /api/registrations` accepts JSON with a full name, email address, and staff verification code.
+`POST /api/verification` takes `{"code":"0529"}` or `{"code":"BIDA-0529"}` and returns `available`, `expired`, `used`, or `invalid` in the `status` field. `POST /api/registrations` accepts JSON with a full name, email address, staff verification code in either format, and `acceptedRegistrationTerms: true`. Both endpoints return `429` with `{"status":"rate_limited"}` when the source reaches its attempt limit.
 
 ```json
 {
   "name": "Sample Visitor",
   "email": "visitor@example.com",
-  "verificationCode": "BDADE2M7"
+  "verificationCode": "BIDA-0529",
+  "acceptedRegistrationTerms": true
 }
 ```
 
 A successful registration returns `201` with `{"code":"BIDA-ABC123"}`. The endpoint returns `400` for invalid input, `409` for an already-used staff code, `410` for an expired code, and `503` when shared registration is unavailable or the write fails. Use a development Supabase project for scripted submissions.
+
+The registration endpoint returns `400` with `{"status":"consent_required"}` if `acceptedRegistrationTerms` is missing or anything other than `true`. The policy links and checkbox appear after code verification. Visitors can open either policy from the registration form or the **Please review and agree** popup. Choosing **Agree and continue** in the popup checks the box.
 
 ### Database objects
 
@@ -226,6 +237,8 @@ A successful registration returns `201` with `{"code":"BIDA-ABC123"}`. The endpo
 | `public.registrations` | Stores the confirmation reference, name, email, and server timestamp. Earlier records may have an unavailable email. |
 | `public.registration_admins` | Stores the Supabase Auth user IDs allowed to read registrations. |
 | `public.verification_codes` | Stores issued codes, their issuer, expiration, and usage time. |
+| `public.booth_verification_limits` | Stores temporary request and failure counts keyed by a hash of the caller's network address. |
+| `public.attempt_booth_verification(...)` | Enforces the shared attempt limit and calls the existing code check or redemption function. |
 | `public.register_verified_visitor(...)` | Uses the staff code and inserts the registration atomically. |
 | `public.search_booth_registrations(search_term)` | Searches names, email addresses, references, and Hong Kong registration times under RLS. |
 
@@ -267,7 +280,7 @@ Open `index.html` in that checkout in Chrome or Edge, or serve the checkout with
 | --- | --- |
 | `/admin` says shared registration must be configured | Set `BIDA_REGISTRATION_MODE=supabase`, confirm the project URL and keys, and restart Next.js. |
 | Staff can authenticate but cannot open the dashboard | Check that the Auth UID is allowlisted in the same project used by the app. |
-| Search or staff code issuance fails | Confirm that `20261126000004_staff_verification.sql` was applied to the configured project. |
+| Search or staff code issuance fails | Confirm that the staff verification and numeric code migrations were applied to the configured project. |
 | New registrations are missing from the dashboard | Confirm the visitor app is in shared mode and both views use the same project. Open the dashboard tab to resume automatic updates. Demo records stay in their original tabs. |
 | The confirmation redirects to registration | Use the same tab and origin that submitted the form. Check that `bida-hk-demo-v1` is available and contains valid JSON. |
 | The PNG fails to save | Check browser download permissions and confirm that the bundled logo and Inter font load. |

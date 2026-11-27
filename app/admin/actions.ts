@@ -1,10 +1,9 @@
 "use server";
 
-import { randomInt } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { createRegistrationClient } from "../../lib/registration-request";
 import { createAdminClient, hasAdminMembership } from "../../lib/supabase/admin";
-import { verificationAlphabet, verificationCodeLength } from "../verification-code";
 
 type ActionState = { error?: string };
 
@@ -43,14 +42,17 @@ export async function issueVerificationCode(): Promise<{
     return { error: "Sign in with a staff account to issue a code." };
   }
 
+  const issuer = createRegistrationClient();
+  if (!issuer) return { error: "Verification codes are unavailable." };
+
   for (let attempt = 0; attempt < 4; attempt++) {
-    const code = Array.from({ length: verificationCodeLength }, () => verificationAlphabet[randomInt(verificationAlphabet.length)]).join("");
-    const { data, error } = await client.from("verification_codes").insert({ code }).select("code, expires_at").single();
-    if (!error && data) {
+    const { data, error } = await issuer.rpc("issue_booth_verification_code", { staff_user_id: user.id })
+      .maybeSingle().overrideTypes<{ code: string; expires_at: string }, { merge: false }>();
+    if (error) break;
+    if (data) {
       revalidatePath("/admin");
       return { issued: data };
     }
-    if (error?.code !== "23505") break;
   }
   return { error: "Could not issue a code. Please try again." };
 }

@@ -91,6 +91,12 @@ function Capabilities() {
 }
 
 export default function HomePage() {
+  const privacyAddress = process.env.BIDA_PRIVACY_CONTACT_ADDRESS?.trim();
+  const privacyContact = privacyAddress ? {
+    name: process.env.BIDA_PRIVACY_CONTACT_NAME?.trim() || "BIDA Booth Registration Lead",
+    address: privacyAddress,
+  } : undefined;
+
   return (
     <>
       <main className="mx-auto w-full max-w-[1000px] pb-[65px]">
@@ -104,7 +110,10 @@ export default function HomePage() {
             Join our booth activities!
           </h2>
           <p className="mt-2.5 mb-5">Download the BIDA app and complete your account registration. Show the app to our booth staff for verification, then return to this page or scan the booth QR code again to enter your verification code.</p>
-          <RegistrationForm demoCode={!useSharedRegistration() && process.env.VERCEL_ENV !== "production" ? "BDADE2M7" : undefined} />
+          <RegistrationForm
+            demoCode={!useSharedRegistration() && process.env.VERCEL_ENV !== "production" ? "BIDA-0529" : undefined}
+            privacyContact={privacyContact}
+          />
         </section>
         <Capabilities />
       </main>

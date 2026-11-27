@@ -1,4 +1,4 @@
-import { createRegistrationClient, readRegistrationRequest } from "../../../lib/registration-request";
+import { createRegistrationClient, readRegistrationRequest, verificationAttemptSource } from "../../../lib/registration-request";
 import { normalizeVerificationCode } from "../../verification-code";
 
 export async function POST(request: Request) {
@@ -10,7 +10,10 @@ export async function POST(request: Request) {
 
   const client = createRegistrationClient();
   if (!client) return new Response(null, { status: 503 });
-  const { data, error } = await client.rpc("check_booth_verification", { verification_code: code });
+  const { data, error } = await client.rpc("attempt_booth_verification", {
+    verification_code: code,
+    attempt_source: verificationAttemptSource(request),
+  });
   if (error) return new Response(null, { status: 503 });
-  return Response.json({ status: data });
+  return Response.json({ status: data }, { status: data === "rate_limited" ? 429 : 200 });
 }
